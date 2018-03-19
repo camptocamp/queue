@@ -83,6 +83,8 @@ class QueueJob(models.Model):
                           store=True,
                           index=True)
 
+    identity_key = fields.Char()
+
     @api.multi
     def _inverse_channel(self):
         self.filtered(lambda a: not a.channel)._compute_channel()

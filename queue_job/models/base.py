@@ -26,7 +26,7 @@ class Base(models.AbstractModel):
     @api.multi
     def with_delay(self, priority=None, eta=None,
                    max_retries=None, description=None,
-                   channel=None):
+                   channel=None, identity_key=None):
         """ Return a ``DelayableRecordset``
 
         The returned instance allow to enqueue any method of the recordset's
@@ -60,4 +60,5 @@ class Base(models.AbstractModel):
                                   eta=eta,
                                   max_retries=max_retries,
                                   description=description,
-                                  channel=channel)
+                                  channel=channel,
+                                  identity_key=identity_key)
