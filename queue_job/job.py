@@ -191,7 +191,8 @@ class Job(object):
     .. attribute::identity_key
 
         A key referencing the job, multiple job with the same key will not
-        be added to a channel.
+        be added to a channel if the existing job with the same key is not yet
+        started or executed.
 
     """
 
@@ -249,7 +250,7 @@ class Job(object):
         """Check if a job to be executed with the same key exists."""
         jobs = env['queue.job'].search(
             [('identity_key', '=', identity_key),
-             ('state', 'in', [PENDING, ENQUEUED, STARTED])],
+             ('state', 'in', [PENDING, ENQUEUED])],
             limit=1
         )
         return bool(len(jobs))

@@ -85,6 +85,19 @@ class QueueJob(models.Model):
 
     identity_key = fields.Char()
 
+    @api.model_cr
+    def init(self):
+        self._cr.execute(
+            'SELECT indexname FROM pg_indexes WHERE indexname = %s ',
+            ('queue_job_identity_key_state_partial_index',)
+        )
+        if not self._cr.fetchone():
+            self._cr.execute(
+                "CREATE INDEX queue_job_identity_key_state_partial_index "
+                "ON queue_job (identity_key) WHERE state in ('pending', "
+                "'enqueued');"
+            )
+
     @api.multi
     def _inverse_channel(self):
         self.filtered(lambda a: not a.channel)._compute_channel()
