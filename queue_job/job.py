@@ -328,6 +328,12 @@ class Job(object):
         if new_job.identity_key:
             existing = new_job.job_record_with_same_identity_key()
             if existing:
+                _logger.debug(
+                    'a job has not been enqueued due to having '
+                    'the same identity key (%s) than job %s',
+                    new_job.identity_key,
+                    existing.uuid
+                )
                 return Job._load_from_db_record(existing)
         new_job.store()
         _logger.debug(
