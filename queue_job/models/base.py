@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
 import inspect
+import os
 
 from odoo import models, api
 from ..job import DelayableRecordset
@@ -62,6 +63,9 @@ class Base(models.AbstractModel):
         :return: instance of a DelayableRecordset
         :rtype: :class:`odoo.addons.queue_job.job.DelayableRecordset`
         """
+        if os.getenv('TEST_QUEUE_JOB_BYPASS'):
+            print('!!! TEST_QUEUE_JOB_BYPASS => NO DELAYED JOB !!!')
+            return self
         return DelayableRecordset(self, priority=priority,
                                   eta=eta,
                                   max_retries=max_retries,
