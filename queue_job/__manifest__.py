@@ -7,9 +7,7 @@
  'website': 'https://github.com/OCA/queue/queue_job',
  'license': 'AGPL-3',
  'category': 'Generic Modules',
- 'depends': ['mail',
-             'base_sparse_field'
-             ],
+ 'depends': [],
  'external_dependencies': {'python': ['requests'
                                       ],
                            },
@@ -18,7 +16,7 @@
           'views/queue_job_views.xml',
           'data/queue_data.xml',
           ],
- 'installable': True,
+ 'installable': False,
  'development_status': 'Mature',
  'maintainers': ['guewen'],
  }
