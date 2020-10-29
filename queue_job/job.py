@@ -265,7 +265,7 @@ class Job(object):
     @classmethod
     def _load_from_db_record(cls, job_db_record):
         stored = job_db_record
-        env = job_db_record.env
+        env = job_db_record.env(su=stored.func_env.get("su", False))
 
         args = stored.args
         kwargs = stored.kwargs
@@ -525,6 +525,11 @@ class Job(object):
             raise
         return self.result
 
+    def _func_env_values(self):
+        return {
+            "su": self.env.su,
+        }
+
     def store(self):
         """Store the Job"""
         vals = {
@@ -541,6 +546,7 @@ class Job(object):
             "date_done": False,
             "eta": False,
             "identity_key": False,
+            "func_env": self._func_env_values(),
         }
 
         if self.date_enqueued:
@@ -585,8 +591,9 @@ class Job(object):
 
     @property
     def func(self):
-        recordset = self.recordset.with_context(job_uuid=self.uuid)
-        recordset = recordset.with_user(self.user_id)
+        env = self.recordset.env(user=self.user_id, su=self.env.su)
+        recordset = self.recordset.with_env(env)
+        recordset = recordset.with_context(job_uuid=self.uuid)
         return getattr(recordset, self.method_name)
 
     @property
