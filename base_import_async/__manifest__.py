@@ -11,8 +11,8 @@
     "website": "https://github.com/OCA/queue",
     "category": "Generic Modules",
     "depends": ["base_import", "queue_job"],
-    "data": ["views/base_import_async.xml"],
+    "data": ["data/queue_job_function_data.xml", "views/base_import_async.xml"],
     "qweb": ["static/src/xml/import.xml"],
     "installable": True,
-    "development_status": "Stable",
+    "development_status": "Production/Stable",
 }
