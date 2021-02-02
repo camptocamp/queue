@@ -554,11 +554,6 @@ class Job(object):
         if db_record:
             db_record.with_context(_job_edit_sentinel=edit_sentinel).write(vals)
         else:
-            date_created = self.date_created
-            job_function_name = self.job_function_name
-            job_function = (
-                self.env["queue.job.function"].sudo().get_by_name(job_function_name)
-            )
             vals.update(
                 {
                     "user_id": self.env.uid,
@@ -568,11 +563,11 @@ class Job(object):
                     "uuid": self.uuid,
                     "name": self.description,
                     "func_string": self.func_string,
-                    "date_created": date_created,
+                    "date_created": self.date_created,
                     "model_name": self.recordset._name,
                     "method_name": self.method_name,
-                    "job_function_id": job_function.id,
-                    "channel_method_name": job_function_name,
+                    "job_function_id": self.job_config.job_function_id,
+                    "channel_method_name": self.job_function_name,
                     "records": self.recordset,
                     "args": self.args,
                     "kwargs": self.kwargs,

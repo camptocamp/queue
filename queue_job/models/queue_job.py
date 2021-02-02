@@ -468,7 +468,8 @@ class JobFunction(models.Model):
         "retry_pattern "
         "related_action_enable "
         "related_action_func_name "
-        "related_action_kwargs ",
+        "related_action_kwargs "
+        "job_function_id ",
     )
 
     def _default_channel(self):
@@ -590,6 +591,7 @@ class JobFunction(models.Model):
             related_action_enable=True,
             related_action_func_name=None,
             related_action_kwargs={},
+            job_function_id=None,
         )
 
     def _parse_retry_pattern(self):
@@ -611,12 +613,8 @@ class JobFunction(models.Model):
         return retry_pattern
 
     @tools.ormcache("name")
-    def get_by_name(self, name):
-        return self.search([("name", "=", name)], limit=1)
-
-    @tools.ormcache("name")
     def job_config(self, name):
-        config = self.get_by_name(name)
+        config = self.search([("name", "=", name)], limit=1)
         if not config:
             return self.job_default_config()
         retry_pattern = config._parse_retry_pattern()
@@ -626,6 +624,7 @@ class JobFunction(models.Model):
             related_action_enable=config.related_action.get("enable", True),
             related_action_func_name=config.related_action.get("func_name"),
             related_action_kwargs=config.related_action.get("kwargs"),
+            job_function_id=config.id,
         )
 
     def _retry_pattern_format_error_message(self):
