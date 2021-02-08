@@ -79,6 +79,7 @@ class QueueJob(models.Model):
     date_started = fields.Datetime(string="Start Date", readonly=True)
     date_enqueued = fields.Datetime(string="Enqueue Time", readonly=True)
     date_done = fields.Datetime(readonly=True)
+    exec_time = fields.Float(help="Time required to execute this job in seconds.")
 
     eta = fields.Datetime(string="Execute only after")
     retry = fields.Integer(string="Current try")
