@@ -79,6 +79,11 @@ class QueueJob(models.Model):
     date_started = fields.Datetime(string="Start Date", readonly=True)
     date_enqueued = fields.Datetime(string="Enqueue Time", readonly=True)
     date_done = fields.Datetime(readonly=True)
+    exec_time = fields.Float(
+        help="Time required to execute this job. Very useful for stats.",
+        compute="_compute_exec_time",
+        store=True,
+    )
 
     eta = fields.Datetime(string="Execute only after")
     retry = fields.Integer(string="Current try")
@@ -115,6 +120,14 @@ class QueueJob(models.Model):
     def _compute_record_ids(self):
         for record in self:
             record.record_ids = record.records.ids
+
+    @api.depends("date_done")
+    def _compute_exec_time(self):
+        for record in self:
+            if not record.date_started or not record.date_done:
+                record.exec_time = False
+                continue
+            record.exec_time = (record.date_done - record.date_started).total_seconds()
 
     @api.model_create_multi
     def create(self, vals_list):
