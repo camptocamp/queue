@@ -7,7 +7,7 @@ from odoo import SUPERUSER_ID, api
 _logger = logging.getLogger(__name__)
 
 
-def migrate(cr, version):
+def DISABLED_migrate(cr, version):
     with api.Environment.manage():
         env = api.Environment(cr, SUPERUSER_ID, {})
         _logger.info("Computing exception name for failed jobs")
