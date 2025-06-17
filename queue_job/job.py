@@ -232,7 +232,18 @@ class Job:
         method_name = stored.method_name
 
         recordset = stored.records
-        method = getattr(recordset, method_name)
+
+        try:
+            method = getattr(recordset, method_name)
+        except Exception as err:
+                type_, value, traceback = sys.exc_info()
+                # change the exception type but keep the original
+                # traceback and message:
+                # http://blog.ianbicking.org/2007/09/12/re-raising-exceptions/
+                new_exc = FailedJobError(
+                    "The method_name doesn't exist" % (method_name)
+                )
+                raise new_exc from err
 
         eta = None
         if stored.eta:
