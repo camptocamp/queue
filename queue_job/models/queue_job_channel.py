@@ -85,8 +85,11 @@ class QueueJobChannel(models.Model):
         return super().write(values)
 
     def unlink(self):
-        # Avoid raising in unlink; skip removal of the root channel
-        allowed = self.filtered(lambda c: c.name != "root")
-        if allowed:
-            super(QueueJobChannel, allowed).unlink()
-        return True
+        # Do not raise here to comply with lint; guard in ondelete instead.
+        return super().unlink()
+
+    @api.ondelete(at_uninstall=False)
+    def _check_not_root_ondelete(self):
+        for channel in self:
+            if channel.name == "root":
+                raise exceptions.UserError(self.env._("Cannot remove the root channel"))
