@@ -259,8 +259,9 @@ class QueueJob(models.Model):
                 fieldname for fieldname in vals if fieldname in self._protected_fields
             ]
             if write_on_protected_fields:
-                # use env translation and lazy formatting
-                msg = self.env._("Not allowed to change field(s): %s") % (
+                # use env translation and lazy formatting (args to _)
+                msg = self.env._(
+                    "Not allowed to change field(s): %s",
                     ", ".join(write_on_protected_fields),
                 )
                 raise exceptions.AccessError(msg)
@@ -304,7 +305,7 @@ class QueueJob(models.Model):
         )
         action.update(
             {
-                "name": self.env._("Jobs for graph %s") % (self.graph_uuid,),
+                "name": self.env._("Jobs for graph %s", self.graph_uuid),
                 "context": {},
                 "domain": [("id", "in", jobs.ids)],
             }
@@ -336,12 +337,12 @@ class QueueJob(models.Model):
                 raise ValueError(f"State not supported: {state}")
 
     def button_done(self):
-        result = self.env._("Manually set to done by %s") % (self.env.user.name,)
+        result = self.env._("Manually set to done by %s", self.env.user.name)
         self._change_job_state(DONE, result=result)
         return True
 
     def button_cancelled(self):
-        result = self.env._("Cancelled by %s") % (self.env.user.name,)
+        result = self.env._("Cancelled by %s", self.env.user.name)
         self._change_job_state(CANCELLED, result=result)
         return True
 

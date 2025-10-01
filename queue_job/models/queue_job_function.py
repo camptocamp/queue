@@ -92,7 +92,7 @@ class QueueJobFunction(models.Model):
         groups = regex_job_function_name.match(self.name)
         if not groups:
             raise exceptions.UserError(
-                self.env._("Invalid job function: %s") % (self.name,)
+                self.env._("Invalid job function: %s", self.name)
             )
         model_name = groups[1]
         method = groups[2]
@@ -100,7 +100,7 @@ class QueueJobFunction(models.Model):
             self.env["ir.model"].sudo().search([("model", "=", model_name)], limit=1)
         )
         if not model:
-            raise exceptions.UserError(self.env._("Model %s not found") % (model_name,))
+            raise exceptions.UserError(self.env._("Model %s not found", model_name))
         self.model_id = model.id
         self.method = method
 
@@ -193,8 +193,9 @@ class QueueJobFunction(models.Model):
             "Unexpected format of Retry Pattern for %s.\n"
             "Example of valid formats:\n"
             "{{1: 300, 5: 600, 10: 1200, 15: 3000}}\n"
-            "{{1: (1, 10), 5: (11, 20), 10: (21, 30), 15: (100, 300)}}"
-        ) % (self.name,)
+            "{{1: (1, 10), 5: (11, 20), 10: (21, 30), 15: (100, 300)}}",
+            self.name,
+        )
 
     @api.constrains("retry_pattern")
     def _check_retry_pattern(self):
@@ -225,8 +226,9 @@ class QueueJobFunction(models.Model):
             "Unexpected format of Related Action for %s.\n"
             "Example of valid format:\n"
             '{{"enable": True, "func_name": "related_action_foo",'
-            ' "kwargs" {{"limit": 10}}}}'
-        ) % (self.name,)
+            ' "kwargs" {{"limit": 10}}}}',
+            self.name,
+        )
 
     @api.constrains("related_action")
     def _check_related_action(self):
