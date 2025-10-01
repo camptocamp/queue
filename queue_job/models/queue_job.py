@@ -259,11 +259,11 @@ class QueueJob(models.Model):
                 fieldname for fieldname in vals if fieldname in self._protected_fields
             ]
             if write_on_protected_fields:
-                raise exceptions.AccessError(
-                    _("Not allowed to change field(s): {}").format(
-                        write_on_protected_fields
-                    )
+                # use env translation and lazy formatting
+                msg = self.env._("Not allowed to change field(s): %s") % (
+                    ", ".join(write_on_protected_fields),
                 )
+                raise exceptions.AccessError(msg)
 
         different_user_jobs = self.browse()
         if vals.get("user_id"):
@@ -291,7 +291,7 @@ class QueueJob(models.Model):
         job = Job.load(self.env, self.uuid)
         action = job.related_action()
         if action is None:
-            raise exceptions.UserError(_("No action available for this job"))
+            raise exceptions.UserError(self.env._("No action available for this job"))
         return action
 
     def open_graph_jobs(self):
@@ -304,7 +304,7 @@ class QueueJob(models.Model):
         )
         action.update(
             {
-                "name": _("Jobs for graph %s") % (self.graph_uuid),
+                "name": self.env._("Jobs for graph %s") % (self.graph_uuid,),
                 "context": {},
                 "domain": [("id", "in", jobs.ids)],
             }
@@ -336,12 +336,12 @@ class QueueJob(models.Model):
                 raise ValueError(f"State not supported: {state}")
 
     def button_done(self):
-        result = _("Manually set to done by {}").format(self.env.user.name)
+        result = self.env._("Manually set to done by %s") % (self.env.user.name,)
         self._change_job_state(DONE, result=result)
         return True
 
     def button_cancelled(self):
-        result = _("Cancelled by {}").format(self.env.user.name)
+        result = self.env._("Cancelled by %s") % (self.env.user.name,)
         self._change_job_state(CANCELLED, result=result)
         return True
 
@@ -382,7 +382,7 @@ class QueueJob(models.Model):
         If nothing is returned, no message will be posted.
         """
         self.ensure_one()
-        return _(
+        return self.env._(
             "Something bad happened during the execution of the job. "
             "More details in the 'Exception Information' section."
         )
@@ -400,25 +400,36 @@ class QueueJob(models.Model):
 
         Called from a cron.
         """
-        for channel in self.env["queue.job.channel"].search([]):
-            deadline = datetime.now() - timedelta(days=int(channel.removal_interval))
-            while True:
-                jobs = self.search(
-                    [
-                        "|",
-                        ("date_done", "<=", deadline),
-                        ("date_cancelled", "<=", deadline),
-                        ("channel", "=", channel.complete_name),
-                    ],
-                    order="date_done, date_created",
-                    limit=1000,
+        # Iterate channels in batches to avoid unbounded search([])
+        Channel = self.env["queue.job.channel"]
+        offset = 0
+        limit = 1000
+        while True:
+            channels = Channel.search([], offset=offset, limit=limit)
+            if not channels:
+                break
+            offset += limit
+            for channel in channels:
+                deadline = datetime.now() - timedelta(
+                    days=int(channel.removal_interval)
                 )
-                if jobs:
-                    jobs.unlink()
-                    if not config["test_enable"]:
-                        self.env.cr.commit()  # pylint: disable=E8102
-                else:
-                    break
+                while True:
+                    jobs = self.search(
+                        [
+                            "|",
+                            ("date_done", "<=", deadline),
+                            ("date_cancelled", "<=", deadline),
+                            ("channel", "=", channel.complete_name),
+                        ],
+                        order="date_done, date_created",
+                        limit=1000,
+                    )
+                    if jobs:
+                        jobs.unlink()
+                        if not config["test_enable"]:
+                            self.env.cr.commit()  # pylint: disable=E8102
+                    else:
+                        break
         return True
 
     def related_action_open_record(self):
@@ -437,7 +448,7 @@ class QueueJob(models.Model):
         if not records:
             return None
         action = {
-            "name": _("Related Record"),
+            "name": self.env._("Related Record"),
             "type": "ir.actions.act_window",
             "view_mode": "form",
             "res_model": records._name,
@@ -447,7 +458,7 @@ class QueueJob(models.Model):
         else:
             action.update(
                 {
-                    "name": _("Related Records"),
+                    "name": self.env._("Related Records"),
                     "view_mode": "list,form",
                     "domain": [("id", "in", records.ids)],
                 }

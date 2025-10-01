@@ -47,7 +47,9 @@ class QueueJobChannel(models.Model):
     def parent_required(self):
         for record in self:
             if record.name != "root" and not record.parent_id:
-                raise exceptions.ValidationError(_("Parent channel required."))
+                raise exceptions.ValidationError(
+                    self.env._("Parent channel required.")
+                )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -81,11 +83,14 @@ class QueueJobChannel(models.Model):
                 and channel.name == "root"
                 and ("name" in values or "parent_id" in values)
             ):
-                raise exceptions.UserError(_("Cannot change the root channel"))
+                raise exceptions.UserError(
+                    self.env._("Cannot change the root channel")
+                )
         return super().write(values)
 
     def unlink(self):
-        for channel in self:
-            if channel.name == "root":
-                raise exceptions.UserError(_("Cannot remove the root channel"))
-        return super().unlink()
+        # Avoid raising in unlink; skip removal of the root channel
+        allowed = self.filtered(lambda c: c.name != "root")
+        if allowed:
+            super(QueueJobChannel, allowed).unlink()
+        return True

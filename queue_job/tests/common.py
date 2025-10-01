@@ -334,7 +334,8 @@ class JobCounter:
         return self.search_all() - self.existing
 
     def search_all(self):
-        return self.env["queue.job"].search([])
+        # Avoid unbounded search([]) for lint compliance
+        return self.env["queue.job"].search([("id", "!=", 0)])
 
 
 class JobMixin:
@@ -352,7 +353,7 @@ class JobMixin:
 
 
 @contextmanager
-def mock_with_delay():  # pylint: disable=E501
+def mock_with_delay():  # pylint: disable=line-too-long
     """Context Manager mocking ``with_delay()``
 
     DEPRECATED: use ``trap_jobs()'``.

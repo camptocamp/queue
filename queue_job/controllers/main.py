@@ -179,7 +179,7 @@ class RunJobController(http.Controller):
         failure_rate=0,
     ):
         if not http.request.env.user.has_group("base.group_erp_manager"):
-            raise Forbidden(_("Access Denied"))
+            raise Forbidden(http.request.env._("Access Denied"))
 
         if failure_rate is not None:
             try:
