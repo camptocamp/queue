@@ -4,11 +4,11 @@ import doctest
 import logging
 import typing
 from contextlib import contextmanager
-from odoo.tools import groupby
 from operator import attrgetter
 from unittest import TestCase, mock
 
 from odoo.tests.case import TestCase as _TestCase
+from odoo.tools import groupby
 
 from odoo.addons.queue_job.delay import Graph
 
