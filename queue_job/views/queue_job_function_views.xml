@@ -36,8 +36,12 @@
                 <field name="name" />
                 <field name="channel_id" />
                 <!-- Odoo 19: no <group expand> wrapper in search; inline group-by filter -->
-                <separator/>
-                <filter name="group_by_channel" string="Channel" context="{'group_by': 'channel_id'}"/>
+                <separator />
+                <filter
+                    name="group_by_channel"
+                    string="Channel"
+                    context="{'group_by': 'channel_id'}"
+                />
             </search>
         </field>
     </record>

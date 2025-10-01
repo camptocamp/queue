@@ -29,6 +29,7 @@ class TestJson(common.TransactionCase):
                 "group_ids": [(6, 0, [group_user.id])],
             }
         )
+
     def test_encoder_recordset(self):
         demo_user = self.demo_user
         context = demo_user.context_get()
@@ -115,7 +116,7 @@ class TestJson(common.TransactionCase):
 
     def test_decoder_recordset_list_without_user(self):
         value_json = (
-            '["a", 1, {"_type": "odoo_recordset",' '"model": "res.users", "ids": [1]}]'
+            '["a", 1, {"_type": "odoo_recordset","model": "res.users", "ids": [1]}]'
         )
         expected = ["a", 1, self.env.ref("base.user_root")]
         value = json.loads(value_json, cls=JobDecoder, env=self.env)
@@ -147,7 +148,7 @@ class TestJson(common.TransactionCase):
         self.assertEqual(json.loads(value_json), expected)
 
     def test_decoder_date(self):
-        value_json = '["a", 1, {"_type": "date_isoformat",' '"value": "2017-04-19"}]'
+        value_json = '["a", 1, {"_type": "date_isoformat","value": "2017-04-19"}]'
         expected = ["a", 1, date(2017, 4, 19)]
         value = json.loads(value_json, cls=JobDecoder, env=self.env)
         self.assertEqual(value, expected)

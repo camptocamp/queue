@@ -894,8 +894,7 @@ class ChannelManager:
                         )
                     if k in config:
                         raise ValueError(
-                            f"Invalid channel config {config_string}: "
-                            f"duplicate key {k}"
+                            f"Invalid channel config {config_string}: duplicate key {k}"
                         )
                     config[k] = v
             else:

@@ -558,6 +558,7 @@ class TestJobModel(JobCommonCase):
                 "group_ids": [(6, 0, [group_user.id])],
             }
         )
+
     def test_job_change_state(self):
         stored = self._create_job()
         stored._change_job_state(DONE, result="test")

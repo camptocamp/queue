@@ -9,8 +9,8 @@ import lxml
 from psycopg2.extras import Json as PsycopgJson
 
 from odoo import fields, models
-from odoo.tools.misc import SENTINEL
 from odoo.tools.func import lazy
+from odoo.tools.misc import SENTINEL
 
 
 class JobSerialized(fields.Json):

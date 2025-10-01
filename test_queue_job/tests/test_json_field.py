@@ -26,6 +26,7 @@ class TestJsonField(common.TransactionCase):
                 "group_ids": [(6, 0, [group_user.id])],
             }
         )
+
     # TODO: when migrating to 16.0, adapt checks in queue_job/tests/test_json_field.py
     # to verify the context keys are encoded and remove these
     def test_encoder_recordset_store_context(self):
