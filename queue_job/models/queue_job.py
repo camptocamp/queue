@@ -144,9 +144,7 @@ class QueueJob(models.Model):
                     "state in ('pending','enqueued','wait_dependencies') "
                     "AND identity_key IS NOT NULL"
                 ),
-                comment=(
-                    "Queue Job: partial index for identity_key on active states"
-                ),
+                comment=("Queue Job: partial index for identity_key on active states"),
             )
         if not index_exists(cr, index_2):
             # Used by <queue.job>.autovacuum
