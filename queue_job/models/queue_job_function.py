@@ -6,7 +6,7 @@ import logging
 import re
 from collections import namedtuple
 
-from odoo import _, api, exceptions, fields, models, tools
+from odoo import api, exceptions, fields, models, tools
 
 from ..fields import JobSerialized
 
@@ -100,9 +100,7 @@ class QueueJobFunction(models.Model):
             self.env["ir.model"].sudo().search([("model", "=", model_name)], limit=1)
         )
         if not model:
-            raise exceptions.UserError(
-                self.env._("Model %s not found") % (model_name,)
-            )
+            raise exceptions.UserError(self.env._("Model %s not found") % (model_name,))
         self.model_id = model.id
         self.method = method
 

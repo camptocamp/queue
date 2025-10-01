@@ -5,7 +5,7 @@ import logging
 import random
 from datetime import datetime, timedelta
 
-from odoo import _, api, exceptions, fields, models
+from odoo import api, exceptions, fields, models
 from odoo.tools import config, html_escape
 from odoo.tools.sql import create_index, index_exists
 

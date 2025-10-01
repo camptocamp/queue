@@ -2,7 +2,7 @@
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html)
 
 
-from odoo import _, api, exceptions, fields, models
+from odoo import api, exceptions, fields, models
 
 
 class QueueJobChannel(models.Model):
@@ -47,9 +47,7 @@ class QueueJobChannel(models.Model):
     def parent_required(self):
         for record in self:
             if record.name != "root" and not record.parent_id:
-                raise exceptions.ValidationError(
-                    self.env._("Parent channel required.")
-                )
+                raise exceptions.ValidationError(self.env._("Parent channel required."))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -83,9 +81,7 @@ class QueueJobChannel(models.Model):
                 and channel.name == "root"
                 and ("name" in values or "parent_id" in values)
             ):
-                raise exceptions.UserError(
-                    self.env._("Cannot change the root channel")
-                )
+                raise exceptions.UserError(self.env._("Cannot change the root channel"))
         return super().write(values)
 
     def unlink(self):
