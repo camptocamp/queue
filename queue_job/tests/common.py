@@ -4,7 +4,7 @@ import doctest
 import logging
 import typing
 from contextlib import contextmanager
-from itertools import groupby
+from odoo.tools import groupby
 from operator import attrgetter
 from unittest import TestCase, mock
 
