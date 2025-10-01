@@ -455,12 +455,9 @@ class Channel:
 
     def __str__(self):
         capacity = "∞" if self.capacity is None else str(self.capacity)
-        return "%s(C:%s,Q:%d,R:%d,F:%d)" % (
-            self.fullname,
-            capacity,
-            len(self._queue),
-            len(self._running),
-            len(self._failed),
+        return (
+            f"{self.fullname}(C:{capacity},Q:{len(self._queue)},"
+            f"R:{len(self._running)},F:{len(self._failed)})"
         )
 
     def remove(self, job):

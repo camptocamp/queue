@@ -49,7 +49,7 @@ for k, v in _flat.items():
     queue_job_config.setdefault(k, v)
 
 
-from .runner import QueueJobRunner, _channels
+from .runner import QueueJobRunner, _channels  # noqa: E402
 
 _logger = logging.getLogger(__name__)
 

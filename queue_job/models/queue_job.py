@@ -128,7 +128,8 @@ class QueueJob(models.Model):
     worker_pid = fields.Integer(readonly=True)
 
     def init(self):
-        # Odoo 19: self._cr deprecated, use self.env.cr; prefer tools.sql helpers for idempotent DDL
+        # Odoo 19: self._cr deprecated; use self.env.cr.
+        # Prefer tools.sql helpers for idempotent DDL.
         cr = self.env.cr
         index_1 = "queue_job_identity_key_state_partial_index"
         index_2 = "queue_job_channel_date_done_date_created_index"
@@ -139,8 +140,13 @@ class QueueJob(models.Model):
                 index_1,
                 "queue_job",
                 ["identity_key"],
-                where="state in ('pending','enqueued','wait_dependencies') AND identity_key IS NOT NULL",
-                comment="Queue Job: partial index for identity_key on active states",
+                where=(
+                    "state in ('pending','enqueued','wait_dependencies') "
+                    "AND identity_key IS NOT NULL"
+                ),
+                comment=(
+                    "Queue Job: partial index for identity_key on active states"
+                ),
             )
         if not index_exists(cr, index_2):
             # Used by <queue.job>.autovacuum
@@ -157,7 +163,8 @@ class QueueJob(models.Model):
         uuids = [uuid for uuid in self.mapped("graph_uuid") if uuid]
         ids_per_graph_uuid = {}
         if uuids:
-            # Odoo 19: avoid ORM warning by using _read_group with 'id:recordset' aggregate
+            # Odoo 19: avoid ORM warning by using _read_group
+            # with 'id:recordset' aggregate
             rows = self.env["queue.job"]._read_group(
                 [("graph_uuid", "in", uuids)],
                 groupby=["graph_uuid"],
