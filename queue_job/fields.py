@@ -68,7 +68,7 @@ class JobSerialized(fields.Json):
     def convert_to_record(self, value, record):
         default = self._base_type_default_json(record.env)
         value = value or default
-        if not isinstance(value, (str, bytes, bytearray)):
+        if not isinstance(value, (str | bytes | bytearray)):
             value = json.dumps(value, cls=JobEncoder)
         return json.loads(value, cls=JobDecoder, env=record.env)
 
