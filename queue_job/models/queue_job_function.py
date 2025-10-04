@@ -91,16 +91,16 @@ class QueueJobFunction(models.Model):
     def _inverse_name(self):
         groups = regex_job_function_name.match(self.name)
         if not groups:
-            raise exceptions.UserError(
-                self.env._("Invalid job function: %s", self.name)
-            )
+            msg = self.env._("Invalid job function: %s", self.name)
+            raise exceptions.UserError(msg)
         model_name = groups[1]
         method = groups[2]
         model = (
             self.env["ir.model"].sudo().search([("model", "=", model_name)], limit=1)
         )
         if not model:
-            raise exceptions.UserError(self.env._("Model %s not found", model_name))
+            msg = self.env._("Model %s not found", model_name)
+            raise exceptions.UserError(msg)
         self.model_id = model.id
         self.method = method
 

@@ -47,7 +47,8 @@ class QueueJobChannel(models.Model):
     def parent_required(self):
         for record in self:
             if record.name != "root" and not record.parent_id:
-                raise exceptions.ValidationError(self.env._("Parent channel required."))
+                msg = self.env._("Parent channel required.")
+                raise exceptions.ValidationError(msg)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -81,11 +82,13 @@ class QueueJobChannel(models.Model):
                 and channel.name == "root"
                 and ("name" in values or "parent_id" in values)
             ):
-                raise exceptions.UserError(self.env._("Cannot change the root channel"))
+                msg = self.env._("Cannot change the root channel")
+                raise exceptions.UserError(msg)
         return super().write(values)
 
     @api.ondelete(at_uninstall=False)
     def _check_not_root_ondelete(self):
         for channel in self:
             if channel.name == "root":
-                raise exceptions.UserError(self.env._("Cannot remove the root channel"))
+                msg = self.env._("Cannot remove the root channel")
+                raise exceptions.UserError(msg)

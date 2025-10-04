@@ -292,7 +292,8 @@ class QueueJob(models.Model):
         job = Job.load(self.env, self.uuid)
         action = job.related_action()
         if action is None:
-            raise exceptions.UserError(self.env._("No action available for this job"))
+            msg = self.env._("No action available for this job")
+            raise exceptions.UserError(msg)
         return action
 
     def open_graph_jobs(self):
