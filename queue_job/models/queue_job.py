@@ -403,7 +403,6 @@ class QueueJob(models.Model):
 
         Called from a cron.
         """
-        # Iterate over all channels (keep unbounded search, silence linter for migration minimalism)
         for channel in self.env["queue.job.channel"].search([]):  # pylint: disable=no-search-all
             deadline = datetime.now() - timedelta(days=int(channel.removal_interval))
             # Delete in chunks using a stable order (matches composite index)
