@@ -335,8 +335,7 @@ class JobCounter:
         return self.search_all() - self.existing
 
     def search_all(self):
-        # Avoid unbounded search([]) for lint compliance
-        return self.env["queue.job"].search([("id", "!=", 0)])
+        return self.env["queue.job"].search([])  # pylint: disable=no-search-all
 
 
 class JobMixin:
