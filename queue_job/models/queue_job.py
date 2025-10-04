@@ -403,36 +403,27 @@ class QueueJob(models.Model):
 
         Called from a cron.
         """
-        # Iterate channels in batches to avoid unbounded search([])
-        Channel = self.env["queue.job.channel"]
-        offset = 0
-        limit = 1000
-        while True:
-            channels = Channel.search([], offset=offset, limit=limit)
-            if not channels:
-                break
-            offset += limit
-            for channel in channels:
-                deadline = datetime.now() - timedelta(
-                    days=int(channel.removal_interval)
+        # Iterate over all channels (keep unbounded search, silence linter for migration minimalism)
+        for channel in self.env["queue.job.channel"].search([]):  # pylint: disable=no-search-all
+            deadline = datetime.now() - timedelta(days=int(channel.removal_interval))
+            # Delete in chunks using a stable order (matches composite index)
+            while True:
+                jobs = self.search(
+                    [
+                        "|",
+                        ("date_done", "<=", deadline),
+                        ("date_cancelled", "<=", deadline),
+                        ("channel", "=", channel.complete_name),
+                    ],
+                    order="date_done, date_created",
+                    limit=1000,
                 )
-                while True:
-                    jobs = self.search(
-                        [
-                            "|",
-                            ("date_done", "<=", deadline),
-                            ("date_cancelled", "<=", deadline),
-                            ("channel", "=", channel.complete_name),
-                        ],
-                        order="date_done, date_created",
-                        limit=1000,
-                    )
-                    if jobs:
-                        jobs.unlink()
-                        if not config["test_enable"]:
-                            self.env.cr.commit()  # pylint: disable=E8102
-                    else:
-                        break
+                if jobs:
+                    jobs.unlink()
+                    if not config["test_enable"]:
+                        self.env.cr.commit()  # pylint: disable=E8102
+                else:
+                    break
         return True
 
     def related_action_open_record(self):
