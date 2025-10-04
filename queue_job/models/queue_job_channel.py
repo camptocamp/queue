@@ -84,10 +84,6 @@ class QueueJobChannel(models.Model):
                 raise exceptions.UserError(self.env._("Cannot change the root channel"))
         return super().write(values)
 
-    def unlink(self):
-        # Do not raise here to comply with lint; guard in ondelete instead.
-        return super().unlink()
-
     @api.ondelete(at_uninstall=False)
     def _check_not_root_ondelete(self):
         for channel in self:
