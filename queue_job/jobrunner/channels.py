@@ -992,7 +992,8 @@ class ChannelManager:
         if channel_name in self._channels_by_name:
             return self._channels_by_name[channel_name]
         if not autocreate and not parent_fallback:
-            raise ChannelNotFound(f"Channel {channel_name} not found")
+            msg = f"Channel {channel_name} not found"
+            raise ChannelNotFound(msg)
         parent = self._root_channel
         if parent_fallback:
             # Look for first direct parent w/ config.

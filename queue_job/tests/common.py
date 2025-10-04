@@ -210,14 +210,14 @@ class JobsTrap:
             )
 
         if expected_call not in actual_calls:
-            raise AssertionError(
-                "Job {} was not enqueued.\nActual enqueued jobs:\n{}".format(
-                    self._format_job_call(expected_call),
-                    "\n".join(
-                        f" * {self._format_job_call(call)}" for call in actual_calls
-                    ),
-                )
+            actual_lines = "\n".join(
+                f" * {self._format_job_call(call)}" for call in actual_calls
             )
+            msg = (
+                f"Job {self._format_job_call(expected_call)} was not enqueued.\n"
+                f"Actual enqueued jobs:\n{actual_lines}"
+            )
+            raise AssertionError(msg)
 
     def perform_enqueued_jobs(self):
         """Perform the enqueued jobs synchronously"""
@@ -304,11 +304,12 @@ class JobsTrap:
             method_all_args.append(
                 ", ".join(f"{key}={value}" for key, value in call.kwargs.items())
             )
-        return "<{}>.{}({}) with properties ({})".format(
-            call.method.__self__,
-            call.method.__name__,
-            ", ".join(method_all_args),
-            ", ".join(f"{key}={value}" for key, value in call.properties.items()),
+        return (
+            f"<{call.method.__self__}>."
+            f"{call.method.__name__}("
+            f"{', '.join(method_all_args)}) "
+            f"with properties ("
+            f"{', '.join(f'{key}={value}' for key, value in call.properties.items())})"
         )
 
     def __repr__(self):

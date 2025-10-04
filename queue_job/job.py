@@ -209,7 +209,8 @@ class Job:
         """
         stored = cls.db_records_from_uuids(env, [job_uuid])
         if not stored:
-            raise NoSuchJobError(f"Job {job_uuid} does no longer exist in the storage.")
+            msg = f"Job {job_uuid} does no longer exist in the storage."
+            raise NoSuchJobError(msg)
         return cls._load_from_db_record(stored)
 
     @classmethod

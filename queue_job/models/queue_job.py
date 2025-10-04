@@ -334,7 +334,8 @@ class QueueJob(models.Model):
                 record.env["queue.job"].flush_model()
                 job_.cancel_dependent_jobs()
             else:
-                raise ValueError(f"State not supported: {state}")
+                msg = f"State not supported: {state}"
+                raise ValueError(msg)
 
     def button_done(self):
         result = self.env._("Manually set to done by %s", self.env.user.name)
