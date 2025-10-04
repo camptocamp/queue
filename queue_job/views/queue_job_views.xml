@@ -253,10 +253,22 @@
                     domain="[('retry', '&gt;', 1)]"
                 />
                 <separator />
-                <!-- Odoo 19: removed date range filters.
-                     Reason: the v19 RNG forbids Python expressions in search domains
-                     (e.g., context_today() - datetime.timedelta(...)).
-                     Use custom actions or saved filters for quick date ranges. -->
+                <!-- Quick datetime ranges using dynamic macros -->
+                <filter
+                    name="last_24_hours"
+                    string="Last 24 hours"
+                    domain="[('date_created', '&gt;=', 'now -1d')]"
+                />
+                <filter
+                    name="last_7_days"
+                    string="Last 7 days"
+                    domain="[('date_created', '&gt;=', 'now -7d')]"
+                />
+                <filter
+                    name="last_30_days"
+                    string="Last 30 days"
+                    domain="[('date_created', '&gt;=', 'now -30d')]"
+                />
                 <separator />
                 <!-- Odoo 19: no <group expand> in search; declare group-by filters inline -->
                 <filter
