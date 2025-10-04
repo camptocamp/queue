@@ -26,7 +26,6 @@ class QueueJobChannel(models.Model):
         default=lambda self: self.env["queue.job"]._removal_interval, required=True
     )
 
-    # Odoo 19: _sql_constraints removed. Use models.Constraint instead.
     _name_uniq = models.Constraint(
         "UNIQUE(complete_name)",
         "Channel complete name must be unique",
