@@ -19,8 +19,6 @@ try:
     else:
         queue_job_config = {}
 except ImportError:
-    # Odoo 19: config.misc is no longer available. Build a minimal config
-    # from flat odoo.conf options so the runner works without server_environment.
     queue_job_config = {}
 
 # Merge flat odoo.conf options as a fallback (applies regardless of whether

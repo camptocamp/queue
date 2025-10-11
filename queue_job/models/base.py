@@ -262,9 +262,7 @@ class Base(models.AbstractModel):
 
     @classmethod
     def _patch_method(cls, name, method):
-        """Patch ``name`` with ``method`` preserving API metadata (Odoo 19).
-
-        Odoo 19 no longer exposes ``api.propagate``. We emulate the
+        """``api.propagate`` is no longer exposed. We emulate the
         propagation by using ``functools.update_wrapper`` and copying the
         decorator metadata which Odoo relies on (see orm.decorators).
         """

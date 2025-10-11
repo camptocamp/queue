@@ -657,7 +657,6 @@ class TestJobModel(JobCommonCase):
         }
         inactiveusr = self.user.create(vals)
         inactiveusr.partner_id.active = True
-        # Odoo 19: res.groups uses 'user_ids' instead of 'users'
         self.assertFalse(inactiveusr in group.user_ids)
         stored = self._create_job()
         stored.write({"state": "failed"})
