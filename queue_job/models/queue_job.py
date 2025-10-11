@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from odoo import api, exceptions, fields, models
 from odoo.tools import config, html_escape
-from odoo.tools.sql import create_index, index_exists
+from odoo.tools.sql import create_index
 
 from odoo.addons.base_sparse_field.models.fields import Serialized
 
@@ -131,28 +131,26 @@ class QueueJob(models.Model):
         cr = self.env.cr
         index_1 = "queue_job_identity_key_state_partial_index"
         index_2 = "queue_job_channel_date_done_date_created_index"
-        if not index_exists(cr, index_1):
-            # Used by Job.job_record_with_same_identity_key
-            create_index(
-                cr,
-                index_1,
-                "queue_job",
-                ["identity_key"],
-                where=(
-                    "state in ('pending','enqueued','wait_dependencies') "
-                    "AND identity_key IS NOT NULL"
-                ),
-                comment=("Queue Job: partial index for identity_key on active states"),
-            )
-        if not index_exists(cr, index_2):
-            # Used by <queue.job>.autovacuum
-            create_index(
-                cr,
-                index_2,
-                "queue_job",
-                ["channel", "date_done", "date_created"],
-                comment="Queue Job: index to accelerate autovacuum",
-            )
+        # Used by Job.job_record_with_same_identity_key
+        create_index(
+            cr,
+            index_1,
+            "queue_job",
+            ["identity_key"],
+            where=(
+                "state in ('pending','enqueued','wait_dependencies') "
+                "AND identity_key IS NOT NULL"
+            ),
+            comment=("Queue Job: partial index for identity_key on active states"),
+        )
+        # Used by <queue.job>.autovacuum
+        create_index(
+            cr,
+            index_2,
+            "queue_job",
+            ["channel", "date_done", "date_created"],
+            comment="Queue Job: index to accelerate autovacuum",
+        )
 
     @api.depends("dependencies")
     def _compute_dependency_graph(self):
