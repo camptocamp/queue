@@ -5,6 +5,7 @@
 import logging
 from threading import Thread
 import time
+from configparser import ConfigParser
 
 from odoo.service import server
 from odoo.tools import config
@@ -19,32 +20,14 @@ try:
     else:
         queue_job_config = {}
 except ImportError:
+    # No server_environment: try to read a [queue_job] section from odoo.conf
     queue_job_config = {}
-
-# Merge flat odoo.conf options as a fallback (applies regardless of whether
-# server_environment is installed). Precedence is enforced later where used:
-# - Environment variables (highest) are read directly in runner functions
-# - Then values coming from server_environment's [queue_job] section (above)
-# - Finally flat odoo.conf options below (lowest)
-#
-# Supported flat options (under the [options] section in odoo.conf):
-#   queue_job_channels = root:2,mychan:1
-#   queue_job_jobrunner_db_host = localhost
-#   queue_job_jobrunner_db_port = 5432
-#   queue_job_jobrunner_db_user = odoo_queue
-#   queue_job_jobrunner_db_password = odoo_queue
-_flat = {}
-channels = config.get("queue_job_channels")
-if channels:
-    _flat["channels"] = channels
-for p in ("host", "port", "user", "password"):
-    v = config.get(f"queue_job_jobrunner_db_{p}")
-    if v:
-        _flat[f"jobrunner_db_{p}"] = v
-
-# Do not override keys coming from server_environment if present
-for k, v in _flat.items():
-    queue_job_config.setdefault(k, v)
+    cfg_path = config.get("config")
+    if cfg_path:
+        cp = ConfigParser(interpolation=None)
+        cp.read(cfg_path)
+        if cp.has_section("queue_job"):
+            queue_job_config = dict(cp["queue_job"])
 
 
 from .runner import QueueJobRunner, _channels  # noqa: E402
