@@ -297,19 +297,24 @@ class JobsTrap:
         return enqueued_jobs
 
     def _format_job_call(self, call):
-        method_all_args = []
-        if call.args:
-            method_all_args.append(", ".join(f"{arg}" for arg in call.args))
-        if call.kwargs:
-            method_all_args.append(
-                ", ".join(f"{key}={value}" for key, value in call.kwargs.items())
-            )
+        # Build method argument string (positional and keyword) separately
+        args_str = ", ".join(f"{arg}" for arg in call.args) if call.args else ""
+        kwargs_str = (
+            ", ".join(f"{key}={value}" for key, value in call.kwargs.items())
+            if call.kwargs
+            else ""
+        )
+        method_args = ", ".join(s for s in (args_str, kwargs_str) if s)
+
+        # Build properties string
+        props_str = ", ".join(
+            f"{key}={value}" for key, value in call.properties.items()
+        )
+
         return (
             f"<{call.method.__self__}>."
-            f"{call.method.__name__}("
-            f"{', '.join(method_all_args)}) "
-            f"with properties ("
-            f"{', '.join(f'{key}={value}' for key, value in call.properties.items())})"
+            f"{call.method.__name__}({method_args}) "
+            f"with properties ({props_str})"
         )
 
     def __repr__(self):
