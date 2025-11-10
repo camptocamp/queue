@@ -472,19 +472,8 @@ class QueueJobRunner:
         return runner
 
     def get_db_names(self):
-        """Return the list of database names to manage.
-
-        In recent Odoo versions, ``config["db_name"]`` may already be a list
-        (upstream config refactor). Older setups provide a comma-separated
-        string. Support both without breaking behavior when unset.
-        """
-        db_name_opt = config["db_name"]
-        if db_name_opt:
-            if isinstance(db_name_opt, (list, tuple, set)):
-                db_names = list(db_name_opt)
-            else:
-                # Accept legacy comma-separated string
-                db_names = [n for n in str(db_name_opt).split(",") if n]
+        if config["db_name"]:
+            db_names = config["db_name"]
         else:
             db_names = odoo.service.db.list_dbs(True)
         return db_names
