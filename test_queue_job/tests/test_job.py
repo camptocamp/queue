@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from unittest import mock
 
 import odoo.tests.common as common
+from odoo import Command
 
 from odoo.addons.queue_job import identity_exact
-from odoo import Command
 from odoo.addons.queue_job.delay import DelayableGraph
 from odoo.addons.queue_job.exception import (
     FailedJobError,
