@@ -116,7 +116,7 @@ class TestJson(common.TransactionCase):
 
     def test_decoder_recordset_list_without_user(self):
         value_json = (
-            '["a", 1, {"_type": "odoo_recordset","model": "res.users", "ids": [1]}]'
+            '["a", 1, {"_type": "odoo_recordset", "model": "res.users", "ids": [1]}]'
         )
         expected = ["a", 1, self.env.ref("base.user_root")]
         value = json.loads(value_json, cls=JobDecoder, env=self.env)
