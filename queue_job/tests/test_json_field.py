@@ -7,6 +7,7 @@ from datetime import date, datetime
 from lxml import etree
 
 from odoo.tests import common
+from odoo import Command
 
 # pylint: disable=odoo-addons-relative-import
 # we are testing, we want to test as we were an external consumer of the API
@@ -25,8 +26,8 @@ class TestJson(common.TransactionCase):
                 "name": "Demo User (Queue)",
                 "login": "queue_demo_user",
                 "company_id": main_company.id,
-                "company_ids": [(6, 0, [main_company.id])],
-                "group_ids": [(6, 0, [group_user.id])],
+                "company_ids": [Command.set([main_company.id])],
+                "group_ids": [Command.set([group_user.id])],
             }
         )
 

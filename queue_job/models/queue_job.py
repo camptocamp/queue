@@ -222,7 +222,6 @@ class QueueJob(models.Model):
         }
 
     def _compute_graph_jobs_count(self):
-        # Use _read_group (read_group is deprecated in Odoo 19)
         graph_uuids = [uuid for uuid in self.mapped("graph_uuid") if uuid]
         if graph_uuids:
             rows = self.env["queue.job"]._read_group(
@@ -230,7 +229,6 @@ class QueueJob(models.Model):
                 ["graph_uuid"],
                 ["__count"],
             )
-            # rows are tuples of (graph_uuid, count)
             count_per_graph_uuid = {graph_uuid: cnt for graph_uuid, cnt in rows}
         else:
             count_per_graph_uuid = {}

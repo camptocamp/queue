@@ -8,6 +8,7 @@ from unittest import mock
 import odoo.tests.common as common
 
 from odoo.addons.queue_job import identity_exact
+from odoo import Command
 from odoo.addons.queue_job.delay import DelayableGraph
 from odoo.addons.queue_job.exception import (
     FailedJobError,
@@ -43,8 +44,8 @@ class TestJobsOnTestingMethod(JobCommonCase):
                 "name": "Demo User (Queue)",
                 "login": "queue_demo_user_3",
                 "company_id": main_company.id,
-                "company_ids": [(6, 0, [main_company.id])],
-                "group_ids": [(6, 0, [group_user.id])],
+                "company_ids": [Command.set([main_company.id])],
+                "group_ids": [Command.set([group_user.id])],
             }
         )
 
@@ -414,8 +415,8 @@ class TestJobs(JobCommonCase):
                 "name": "Demo User (Queue)",
                 "login": "queue_demo_user_4",
                 "company_id": main_company.id,
-                "company_ids": [(6, 0, [main_company.id])],
-                "group_ids": [(6, 0, [group_user.id])],
+                "company_ids": [Command.set([main_company.id])],
+                "group_ids": [Command.set([group_user.id])],
             }
         )
 
@@ -554,8 +555,8 @@ class TestJobModel(JobCommonCase):
                 "name": "Demo User (Queue)",
                 "login": "queue_demo_user_5",
                 "company_id": main_company.id,
-                "company_ids": [(6, 0, [main_company.id])],
-                "group_ids": [(6, 0, [group_user.id])],
+                "company_ids": [Command.set([main_company.id])],
+                "group_ids": [Command.set([group_user.id])],
             }
         )
 
@@ -652,7 +653,7 @@ class TestJobModel(JobCommonCase):
         vals = {
             "name": "xx",
             "login": "xx",
-            "group_ids": [(6, 0, [group.id])],
+            "group_ids": [Command.set([group.id])],
             "active": False,
         }
         inactiveusr = self.user.create(vals)
@@ -711,7 +712,7 @@ class TestJobStorageMultiCompany(common.TransactionCase):
         self.simple_user = User.create(
             {
                 "partner_id": self.partner_user.id,
-                "company_ids": [(4, main_company.id)],
+                "company_ids": [Command.link(main_company.id)],
                 "login": "simple_user",
                 "name": "simple user",
                 "group_ids": [],
@@ -732,10 +733,10 @@ class TestJobStorageMultiCompany(common.TransactionCase):
             {
                 "partner_id": self.other_partner_a.id,
                 "company_id": self.other_company_a.id,
-                "company_ids": [(4, self.other_company_a.id)],
+                "company_ids": [Command.link(self.other_company_a.id)],
                 "login": "my_login a",
                 "name": "my user A",
-                "group_ids": [(4, grp_queue_job_manager)],
+                "group_ids": [Command.link(grp_queue_job_manager)],
             }
         )
         self.other_partner_b = Partner.create(
@@ -752,10 +753,10 @@ class TestJobStorageMultiCompany(common.TransactionCase):
             {
                 "partner_id": self.other_partner_b.id,
                 "company_id": self.other_company_b.id,
-                "company_ids": [(4, self.other_company_b.id)],
+                "company_ids": [Command.link(self.other_company_b.id)],
                 "login": "my_login_b",
                 "name": "my user B",
-                "group_ids": [(4, grp_queue_job_manager)],
+                "group_ids": [Command.link(grp_queue_job_manager)],
             }
         )
 
