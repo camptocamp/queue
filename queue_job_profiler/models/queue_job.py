@@ -12,6 +12,7 @@ class QueueJob(models.Model):
         default=False,
         help="Whether this job has been profiled or not.",
         compute="_compute_job_is_profiled",
+        compute_sudo=True,
     )
 
     def _compute_job_is_profiled(self):
@@ -21,7 +22,7 @@ class QueueJob(models.Model):
             job.job_is_profiled = bool(job._profiler_get_record(profile_name))
 
     def _profiler_get_record(self, profile_name):
-        IrProfile = self.env["ir.profile"]
+        IrProfile = self.env["ir.profile"].sudo()
         return IrProfile.search(
             [("name", "=", profile_name)],
             limit=1,
