@@ -26,6 +26,7 @@ class Base(models.AbstractModel):
         description=None,
         channel=None,
         identity_key=None,
+        on_fail_method=None,
     ):
         """Return a ``DelayableRecordset``
 
@@ -59,6 +60,7 @@ class Base(models.AbstractModel):
             description=description,
             channel=channel,
             identity_key=identity_key,
+            on_fail_method=on_fail_method,
         )
 
     def delayable(
@@ -69,6 +71,7 @@ class Base(models.AbstractModel):
         description=None,
         channel=None,
         identity_key=None,
+        on_fail_method=None,
     ):
         """Return a ``Delayable``
 
@@ -140,6 +143,7 @@ class Base(models.AbstractModel):
             description=description,
             channel=channel,
             identity_key=identity_key,
+            on_fail_method=on_fail_method,
         )
 
     def _patch_job_auto_delay(self, method_name, context_key=None):

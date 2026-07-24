@@ -77,6 +77,7 @@ class QueueJob(models.Model):
 
     model_name = fields.Char(string="Model", readonly=True)
     method_name = fields.Char(readonly=True)
+    on_fail_method_name = fields.Char(readonly=True)
     records = JobSerialized(
         string="Record(s)",
         readonly=True,
@@ -490,3 +491,6 @@ class QueueJob(models.Model):
             time.sleep(job_duration)
         if commit_within_job:
             self.env.cr.commit()  # pylint: disable=invalid-commit
+
+    def _test_on_fail_hook(self, **kw):
+        pass

@@ -308,6 +308,7 @@ class TestDelayMocks(common.TransactionCase):
                     "eta": 15,
                     "identity_key": identity_exact,
                     "max_retries": 1,
+                    "on_fail_method": None,
                     "priority": 15,
                 },
             )
