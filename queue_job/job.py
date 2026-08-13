@@ -200,9 +200,6 @@ class Job:
         be added to a channel if the existing job with the same key is not yet
         started or executed.
 
-    .. attribute::on_fail_method
-
-        A function to be called if the job is failed and will not be retried.
     """
 
     @classmethod
@@ -301,9 +298,6 @@ class Job:
             description=stored.name,
             channel=stored.channel,
             identity_key=stored.identity_key,
-            on_fail_method=getattr(recordset, stored.on_fail_method_name)
-            if stored.on_fail_method_name
-            else None,
         )
 
         if stored.date_created:
@@ -371,7 +365,6 @@ class Job:
         description=None,
         channel=None,
         identity_key=None,
-        on_fail_method=None,
     ):
         """Create a Job
 
@@ -414,14 +407,14 @@ class Job:
         self.method_name = func.__name__
         self.recordset = recordset
 
-        if on_fail_method:
-            if not _is_model_method(on_fail_method):
-                raise TypeError("Job accepts only methods of Models")
-            self.on_fail_method_name = on_fail_method.__name__
-
         self.job_config = (
             self.env["queue.job.function"].sudo().job_config(self.job_function_name)
         )
+        on_fail_method_name = self.job_config.on_fail_method_name
+        if on_fail_method_name:
+            if not _is_model_method(getattr(self.recordset, on_fail_method_name, None)):
+                raise TypeError("Job accepts only methods of Models")
+            self.on_fail_method_name = on_fail_method_name
 
         self.state = PENDING
 
