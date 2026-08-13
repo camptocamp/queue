@@ -33,14 +33,14 @@ class TestRunJobController(TransactionCase):
         self.assertEqual(job.state, "done")
         self.assertEqual(job.db_record().state, "done")
 
-    def test_runjob_on_fail_hook(self):
+    def test_runjob_on_fail(self):
         function = self.env.ref("queue_job.job_function_queue_job__test_job")
-        function.on_fail_method = "_test_on_fail_hook"
+        function.on_fail_method = "_test_on_fail"
         job = self.env["queue.job"].with_delay()._test_job(failure_rate=1)
         with (
             self.assertRaises(JobError),
             patch(
-                "odoo.addons.queue_job.models.queue_job.QueueJob._test_on_fail_hook"
+                "odoo.addons.queue_job.models.queue_job.QueueJob._test_on_fail"
             ) as mocked_hook,
             patch("odoo.addons.queue_job.job.Job.in_temporary_env") as mocked_temp_env,
             mute_logger("odoo.addons.queue_job.controllers.main"),
