@@ -835,7 +835,7 @@ class Job:
             if v is not None:
                 setattr(self, k, v)
 
-    def on_fail_hook(self, fail_vals):
+    def on_fail(self, fail_vals):
         on_fail_func = getattr(self.recordset, self.on_fail_method_name, None)
         if on_fail_func:
             on_fail_func(**fail_vals)

@@ -491,5 +491,5 @@ class QueueJob(models.Model):
         if commit_within_job:
             self.env.cr.commit()  # pylint: disable=invalid-commit
 
-    def _test_on_fail_hook(self, **kw):
+    def _test_on_fail(self, **kw):
         pass
