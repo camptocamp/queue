@@ -438,7 +438,6 @@ class Delayable:
         "description",
         "channel",
         "identity_key",
-        "on_fail_method",
     )
     __slots__ = _properties + (
         "recordset",
@@ -458,7 +457,6 @@ class Delayable:
         description=None,
         channel=None,
         identity_key=None,
-        on_fail_method=None,
     ):
         self._graph = DelayableGraph()
         self._graph.add_vertex(self)
@@ -471,7 +469,6 @@ class Delayable:
         self.description = description
         self.channel = channel
         self.identity_key = identity_key
-        self.on_fail_method = on_fail_method
 
         self._job_method = None
         self._job_args = ()
@@ -550,7 +547,6 @@ class Delayable:
                 description=self.description,
                 channel=self.channel,
                 identity_key=self.identity_key,
-                on_fail_method=self.on_fail_method,
             )
             # Update the __self__
             delayable._job_method = getattr(recordset, self._job_method.__name__)
@@ -587,7 +583,6 @@ class Delayable:
             description=self.description,
             channel=self.channel,
             identity_key=self.identity_key,
-            on_fail_method=self.on_fail_method,
         )
         return self._generated_job
 
@@ -638,7 +633,6 @@ class DelayableRecordset:
         description=None,
         channel=None,
         identity_key=None,
-        on_fail_method=None,
     ):
         self.delayable = Delayable(
             recordset,
@@ -648,7 +642,6 @@ class DelayableRecordset:
             description=description,
             channel=channel,
             identity_key=identity_key,
-            on_fail_method=on_fail_method,
         )
 
     @property

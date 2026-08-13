@@ -77,7 +77,6 @@ class QueueJob(models.Model):
 
     model_name = fields.Char(string="Model", readonly=True)
     method_name = fields.Char(readonly=True)
-    on_fail_method_name = fields.Char(readonly=True)
     records = JobSerialized(
         string="Record(s)",
         readonly=True,

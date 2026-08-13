@@ -34,11 +34,9 @@ class TestRunJobController(TransactionCase):
         self.assertEqual(job.db_record().state, "done")
 
     def test_runjob_on_fail_hook(self):
-        job = (
-            self.env["queue.job"]
-            .with_delay(on_fail_method=self.env["queue.job"]._test_on_fail_hook)
-            ._test_job(failure_rate=1)
-        )
+        function = self.env.ref("queue_job.job_function_queue_job__test_job")
+        function.on_fail_method = "_test_on_fail_hook"
+        job = self.env["queue.job"].with_delay()._test_job(failure_rate=1)
         with (
             self.assertRaises(JobError),
             patch(
