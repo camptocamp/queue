@@ -339,6 +339,8 @@ class Job:
         job_.state = stored.state
         job_.graph_uuid = stored.graph_uuid if stored.graph_uuid else None
         job_.result = stored.result if stored.result else None
+        job_.exc_name = stored.exc_name if stored.exc_name else None
+        job_.exc_message = stored.exc_message if stored.exc_message else None
         job_.exc_info = stored.exc_info if stored.exc_info else None
         job_.retry = stored.retry
         job_.max_retries = stored.max_retries

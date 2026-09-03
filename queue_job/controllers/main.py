@@ -17,8 +17,8 @@ from odoo.service.model import PG_CONCURRENCY_ERRORS_TO_RETRY
 from odoo.tools import config
 
 from ..delay import chain, group
-from ..exception import FailedJobError, RetryableJobError
-from ..job import ENQUEUED, Job
+from ..exception import FailedJobError, NoSuchJobError, RetryableJobError
+from ..job import ENQUEUED, FAILED, Job
 
 _logger = logging.getLogger(__name__)
 
@@ -221,6 +221,55 @@ class RunJobController(http.Controller):
         if not job:
             return ""
         self._runjob(env, job)
+        return ""
+
+    @classmethod
+    def _run_on_fail(cls, env: api.Environment, job_uuid: str) -> None:
+        """Run the ``on_fail`` hook of a job the runner set as failed.
+
+        When a job fails while being performed, ``_runjob`` calls its
+        ``on_fail`` hook. Jobs found dead by the runner are set as failed with
+        plain SQL, and the runner has no Odoo environment to call the hook
+        itself, so it asks Odoo to do it through this method.
+
+        The hook is run only for jobs failed by the runner (``exc_name`` is
+        ``JobFoundDead``): the hook of the other failed jobs already ran.
+        """
+        try:
+            job = Job.load(env, job_uuid)
+        except NoSuchJobError:
+            _logger.warning(
+                "was requested to run the on_fail hook of job %s, "
+                "but it does not exist",
+                job_uuid,
+            )
+            return
+        if job.state != FAILED or job.exc_name != "JobFoundDead":
+            _logger.warning(
+                "was requested to run the on_fail hook of job %s, "
+                "but it is not a job found dead by the runner",
+                job_uuid,
+            )
+            return
+        vals = {
+            "exc_info": job.exc_info,
+            "exc_name": job.exc_name,
+            "exc_message": job.exc_message,
+        }
+        job.on_fail(vals)
+        if not config["test_enable"]:
+            env.cr.commit()
+
+    @http.route(
+        "/queue_job/on_fail",
+        type="http",
+        auth="none",
+        save_session=False,
+        readonly=False,
+    )
+    def on_fail(self, job_uuid, **kw):
+        http.request.update_env(user=SUPERUSER_ID)
+        self._run_on_fail(http.request.env, job_uuid)
         return ""
 
     # flake8: noqa: C901

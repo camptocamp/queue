@@ -60,3 +60,51 @@ class TestRunJobController(TransactionCase):
             mocked_temp_env.return_value.__enter__.return_value = self.env
             RunJobController._runjob(self.env, job)
         self.assertEqual(job.state, "failed")
+
+    def _found_dead(self, job):
+        """Store ``job`` as the runner does for a dead job out of retries."""
+        job.set_failed(
+            exc_name="JobFoundDead",
+            exc_info="Job found dead after too many retries",
+            exc_message="Job found dead after too many retries",
+        )
+        job.store()
+        return job
+
+    def test_run_on_fail_dead_job(self):
+        function = self.env.ref("queue_job.job_function_queue_job__test_job")
+        function.on_fail_method = "_test_on_fail"
+        job = self._found_dead(self.env["queue.job"].with_delay()._test_job())
+        with patch("odoo.addons.queue_job.job.Job.on_fail") as mocked_on_fail:
+            RunJobController._run_on_fail(self.env, job.uuid)
+        mocked_on_fail.assert_called_once_with(
+            {
+                "exc_name": "JobFoundDead",
+                "exc_info": "Job found dead after too many retries",
+                "exc_message": "Job found dead after too many retries",
+            }
+        )
+
+    def test_run_on_fail_dead_job_not_configured(self):
+        job = self._found_dead(self.env["queue.job"].with_delay()._test_job())
+        with patch(
+            "odoo.addons.queue_job.models.queue_job.QueueJob._test_on_fail"
+        ) as mocked_hook:
+            RunJobController._run_on_fail(self.env, job.uuid)
+        self.assertEqual(mocked_hook.call_count, 0)
+
+    def test_run_on_fail_not_dead_job(self):
+        function = self.env.ref("queue_job.job_function_queue_job__test_job")
+        function.on_fail_method = "_test_on_fail"
+        pending_job = self.env["queue.job"].with_delay()._test_job()
+        failed_job = self.env["queue.job"].with_delay()._test_job()
+        failed_job.set_failed(exc_name="ValueError", exc_message="boom")
+        failed_job.store()
+        with (
+            patch("odoo.addons.queue_job.job.Job.on_fail") as mocked_on_fail,
+            mute_logger("odoo.addons.queue_job.controllers.main"),
+        ):
+            RunJobController._run_on_fail(self.env, pending_job.uuid)
+            RunJobController._run_on_fail(self.env, failed_job.uuid)
+            RunJobController._run_on_fail(self.env, "unknown-uuid")
+        mocked_on_fail.assert_not_called()

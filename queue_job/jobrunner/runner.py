@@ -17,6 +17,9 @@ How does it work?
   is populated from the queue_job tables in all databases.
 * It does not run jobs itself, but asks Odoo to run them through an
   anonymous ``/queue_job/runjob`` HTTP request.
+* When it finds a dead job that exhausted its retries, it marks it as
+  failed and asks Odoo to run the job's ``on_fail`` hook through an
+  anonymous ``/queue_job/on_fail`` HTTP request.
 """
 
 import logging
@@ -34,7 +37,7 @@ import odoo
 from odoo.tools import config
 
 from . import queue_job_config
-from .channels import ENQUEUED, NOT_DONE, ChannelManager
+from .channels import ENQUEUED, FAILED, NOT_DONE, ChannelManager
 
 SELECT_TIMEOUT = 60
 ERROR_RECOVERY_DELAY = 5
@@ -85,12 +88,14 @@ def _connection_info_for(db_name):
     return connection_info
 
 
-def _async_http_get(scheme, host, port, user, password, db_name, job_uuid):
+def _async_http_get(
+    scheme, host, port, user, password, db_name, job_uuid, path="/queue_job/runjob"
+):
     # TODO: better way to HTTP GET asynchronously (grequest, ...)?
     #       if this was python3 I would be doing this with
     #       asyncio, aiohttp and aiopg
     def urlopen():
-        url = f"{scheme}://{host}:{port}/queue_job/runjob?job_uuid={job_uuid}"
+        url = f"{scheme}://{host}:{port}{path}?job_uuid={job_uuid}"
         # pylint: disable=except-pass
         try:
             auth = None
@@ -253,6 +258,16 @@ class Database:
                             retry>max_retries
                         THEN 'Job found dead after too many retries'
                         ELSE exc_info
+                    END),
+                exc_message=(
+                    CASE
+                        WHEN
+                            max_retries IS NOT NULL AND
+                            max_retries != 0 AND -- infinite retries if max_retries is 0
+                            retry IS NOT NULL AND
+                            retry>max_retries
+                        THEN 'Job found dead after too many retries'
+                        ELSE exc_message
                     END)
             WHERE
                 state IN ('enqueued','started')
@@ -276,7 +291,7 @@ class Database:
                             queue_job_lock.queue_job_id = queue_job.id
                     )
                 )
-            RETURNING uuid
+            RETURNING uuid, state
             """
 
     def requeue_dead_jobs(self):
@@ -303,15 +318,25 @@ class Database:
         but the HTTP request to start the job never reaches the Odoo server
         (e.g., due to server shutdown/crash between setting enqueued and
         the controller receiving the request).
-        """
 
+        :return: uuids of the dead jobs that were set as 'failed', so the
+                 runner can ask Odoo to run their ``on_fail`` hook
+        """
+        failed_uuids = []
         with closing(self.conn.cursor()) as cr:
             query = self._query_requeue_dead_jobs()
 
             cr.execute(query)
 
-            for (uuid,) in cr.fetchall():
-                _logger.warning("Re-queued dead job with uuid: %s", uuid)
+            for uuid, state in cr.fetchall():
+                if state == FAILED:
+                    _logger.warning(
+                        "Dead job with uuid %s failed after too many retries", uuid
+                    )
+                    failed_uuids.append(uuid)
+                else:
+                    _logger.warning("Re-queued dead job with uuid: %s", uuid)
+        return failed_uuids
 
 
 class QueueJobRunner:
@@ -409,8 +434,27 @@ class QueueJobRunner:
 
     def requeue_dead_jobs(self):
         for db in self.db_by_name.values():
-            if db.has_queue_job:
-                db.requeue_dead_jobs()
+            if not db.has_queue_job:
+                continue
+            for uuid in db.requeue_dead_jobs():
+                # The runner cannot call model methods itself: ask Odoo to run
+                # the on_fail hook, as it would have been run by the controller
+                # if the job had failed while being performed.
+                _logger.info(
+                    "asking Odoo to run the on_fail hook of job %s on db %s",
+                    uuid,
+                    db.db_name,
+                )
+                _async_http_get(
+                    self.scheme,
+                    self.host,
+                    self.port,
+                    self.user,
+                    self.password,
+                    db.db_name,
+                    uuid,
+                    path="/queue_job/on_fail",
+                )
 
     def run_jobs(self):
         now = _odoo_now()
