@@ -3,7 +3,7 @@
 
 from odoo.tests import common
 
-from odoo.addons.queue_job.job import Job
+from odoo.addons.queue_job.job import QUEUE_JOB_LOCK_KEY, Job
 
 
 class JobCommonCase(common.TransactionCase):
@@ -30,3 +30,17 @@ class JobCommonCase(common.TransactionCase):
             "to make this test work",
         )
         return job
+
+    def is_job_locked(self, job, cr=None):
+        base_query = "SELECT 1 FROM queue_job WHERE uuid = %s"
+        query_lock_shared, query_unlock_shared = (
+            f"{base_query} AND pg_try_advisory_lock_shared(%s, id);",
+            f"{base_query} AND pg_advisory_unlock_shared(%s, id);",
+        )
+        args = job.uuid, QUEUE_JOB_LOCK_KEY
+        with self.env.registry.cursor() as cr:
+            cr.execute(query_lock_shared, args)
+            if not cr.fetchone():
+                return True
+            cr.execute(query_unlock_shared, args)
+        return False

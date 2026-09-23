@@ -35,6 +35,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import odoo
 from odoo.tools import config
 
+from ..job import QUEUE_JOB_LOCK_KEY
 from . import queue_job_config
 from .channels import ENQUEUED, NOT_DONE, RELOAD_PAYLOAD, ChannelConfig, ChannelManager
 
@@ -396,25 +397,7 @@ class Database:
             WHERE
                 state IN ('enqueued','started')
                 AND date_enqueued < (now() AT TIME ZONE 'utc' - INTERVAL '10 sec')
-                AND (
-                    id in (
-                        SELECT
-                            queue_job_id
-                        FROM
-                            queue_job_lock
-                        WHERE
-                            queue_job_lock.queue_job_id = queue_job.id
-                        FOR NO KEY UPDATE SKIP LOCKED
-                    )
-                    OR NOT EXISTS (
-                        SELECT
-                            1
-                        FROM
-                            queue_job_lock
-                        WHERE
-                            queue_job_lock.queue_job_id = queue_job.id
-                    )
-                )
+                AND pg_try_advisory_xact_lock(%s, id %% (1<<31))
             RETURNING uuid
             """
 
@@ -447,7 +430,7 @@ class Database:
         with closing(self.conn.cursor()) as cr:
             query = self._query_requeue_dead_jobs()
 
-            cr.execute(query)
+            cr.execute(query, (QUEUE_JOB_LOCK_KEY,))
 
             for (uuid,) in cr.fetchall():
                 _logger.warning("Re-queued dead job with uuid: %s", uuid)
