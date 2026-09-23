@@ -18,7 +18,7 @@ from odoo.tools import config
 
 from ..delay import chain, group
 from ..exception import FailedJobError, RetryableJobError
-from ..job import ENQUEUED, Job
+from ..job import ENQUEUED, STARTED, Job
 
 _logger = logging.getLogger(__name__)
 
@@ -65,12 +65,8 @@ class RunJobController(http.Controller):
         function may fail to acquire the job is not in the expected state or is
         already locked by another worker.
         """
-        env.cr.execute(
-            "SELECT uuid FROM queue_job WHERE uuid=%s AND state=%s "
-            "FOR NO KEY UPDATE SKIP LOCKED",
-            (job_uuid, ENQUEUED),
-        )
-        if not env.cr.fetchone():
+        job = Job.load(env, job_uuid)
+        if not job or not job.lock(ENQUEUED):
             _logger.warning(
                 "was requested to run job %s, but it does not exist, "
                 "or is not in state %s, or is being handled by another worker",
@@ -78,12 +74,10 @@ class RunJobController(http.Controller):
                 ENQUEUED,
             )
             return None
-        job = Job.load(env, job_uuid)
-        assert job and job.state == ENQUEUED
         job.set_started()
         job.store()
         env.cr.commit()
-        if not job.lock():
+        if not job.lock(STARTED):
             _logger.warning(
                 "was requested to run job %s, but it could not be locked",
                 job_uuid,
