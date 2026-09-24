@@ -337,7 +337,7 @@ class QueueJob(models.Model):
 
     def button_cancelled(self):
         # If job was set to DONE do not cancel it
-        states_from = (WAIT_DEPENDENCIES, PENDING, ENQUEUED, FAILED)
+        states_from = (WAIT_DEPENDENCIES, PENDING, ENQUEUED, STARTED, FAILED)
         result = _("Cancelled by %s") % self.env.user.name
         records = self.filtered(lambda job_: job_.state in states_from)
         records._change_job_state(CANCELLED, result=result)
