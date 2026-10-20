@@ -623,6 +623,7 @@ class TestJobModel(JobCommonCase):
         # Check the state
         self.assertEqual(record_root.state, CANCELLED)
         self.assertEqual(record_child.state, CANCELLED)
+        self.assertTrue(record_child.date_cancelled)
 
     def test_requeue(self):
         stored = self._create_job()
