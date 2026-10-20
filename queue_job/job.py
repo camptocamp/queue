@@ -573,7 +573,8 @@ class Job:
             WHERE
             queue_job.id = jobs.id
             AND %s = ALL(jobs.parent_states)
-            AND state = %s;
+            AND state = %s
+            RETURNING queue_job.id;
         """
 
     def should_check_dependents(self):
@@ -587,7 +588,13 @@ class Job:
     def cancel_dependent_jobs(self):
         sql = self._get_common_dependent_jobs_query()
         self.env.cr.execute(sql, (CANCELLED, self.uuid, CANCELLED, WAIT_DEPENDENCIES))
-        self.env["queue.job"].invalidate_model(["state"])
+        cancelled_ids = tuple(row[0] for row in self.env.cr.fetchall())
+        if cancelled_ids:
+            self.env.cr.execute(
+                "UPDATE queue_job SET date_cancelled = %s WHERE id IN %s",
+                (datetime.now(), cancelled_ids),
+            )
+        self.env["queue.job"].invalidate_model(["state", "date_cancelled"])
 
     def store(self):
         """Store the Job"""
