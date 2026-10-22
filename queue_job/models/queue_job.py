@@ -83,6 +83,18 @@ class QueueJob(models.Model):
         base_type=models.BaseModel,
     )
     dependencies = Serialized(readonly=True)
+    dependency_ids = fields.Many2many(
+        comodel_name="queue.job",
+        compute="_compute_dependency_ids",
+        string="Dependency Jobs",
+        help="Jobs this job depends on.",
+    )
+    dependent_ids = fields.Many2many(
+        comodel_name="queue.job",
+        compute="_compute_dependency_ids",
+        string="Dependent Jobs",
+        help="Jobs depending on this job.",
+    )
     # dependency graph as expected by the field widget
     dependency_graph = Serialized(compute="_compute_dependency_graph")
     graph_jobs_count = fields.Integer(compute="_compute_graph_jobs_count")
@@ -152,6 +164,30 @@ class QueueJob(models.Model):
             ["channel", "date_done", "date_created"],
             comment="Queue Job: index to accelerate autovacuum",
         )
+
+    @api.depends("dependencies")
+    def _compute_dependency_ids(self):
+        uuids = set()
+        for record in self:
+            dependencies = record.dependencies or {}
+            uuids.update(dependencies.get("depends_on", []))
+            uuids.update(dependencies.get("reverse_depends_on", []))
+        jobs = self.search([("uuid", "in", list(uuids))])
+        jobs_by_uuid = jobs.grouped("uuid")
+        for record in self:
+            dependencies = record.dependencies or {}
+            record.dependency_ids = self.browse().concat(
+                *(
+                    jobs_by_uuid.get(uuid, self.browse())
+                    for uuid in dependencies.get("depends_on", [])
+                )
+            )
+            record.dependent_ids = self.browse().concat(
+                *(
+                    jobs_by_uuid.get(uuid, self.browse())
+                    for uuid in dependencies.get("reverse_depends_on", [])
+                )
+            )
 
     @api.depends("dependencies")
     def _compute_dependency_graph(self):
@@ -342,8 +378,11 @@ class QueueJob(models.Model):
         # If job was set to DONE do not cancel it
         states_from = (WAIT_DEPENDENCIES, PENDING, ENQUEUED, FAILED)
         result = self.env._("Cancelled by %s", self.env.user.name)
-        records = self.filtered(lambda job_: job_.state in states_from)
-        records._change_job_state(CANCELLED, result=result)
+        for record in self:
+            # Cancelling a job also cancels its dependents, some of them may
+            # be in self already
+            if record.state in states_from:
+                record._change_job_state(CANCELLED, result=result)
         return True
 
     def requeue(self):
