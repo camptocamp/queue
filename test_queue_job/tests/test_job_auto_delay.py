@@ -28,7 +28,19 @@ class TestJobAutoDelay(JobCommonCase):
     def test_auto_delay_inside_job(self):
         """when a delayed job is processed, it must not delay itself"""
         job_ = self.env["test.queue.job"].delay_me(1, kwarg=2)
-        self.assertTrue(job_.perform(), (1, 2))
+        self.assertEqual(job_.perform(), (1, 2))
+
+    def test_auto_delay_inside_other_job(self):
+        """a job calling another auto delayed method delays it"""
+        job_ = self.env["test.queue.job"].with_delay().call_delay_me()
+        result = job_.perform()
+        self.assertTrue(isinstance(result, Job))
+        self.assertEqual(result.method_name, "delay_me")
+
+    def test_auto_delay_in_job_context(self):
+        """being in a job does not prevent the delay of an auto delayed method"""
+        result = self.env["test.queue.job"].with_context(job_uuid="x").delay_me(1)
+        self.assertTrue(isinstance(result, Job))
 
     def test_auto_delay_force_sync(self):
         """method forced to run synchronously"""

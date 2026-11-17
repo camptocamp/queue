@@ -733,7 +733,10 @@ class Job:
     @property
     def func(self):
         recordset = self.recordset.with_context(job_uuid=self.uuid)
-        return getattr(recordset, self.method_name)
+        func = getattr(recordset, self.method_name)
+        # Auto delayed methods: run the method itself, not the wrapper delaying it.
+        origin = getattr(func, "origin", None)
+        return origin.__get__(recordset) if inspect.isfunction(origin) else func
 
     @property
     def job_function_name(self):

@@ -129,6 +129,9 @@ class ModelTestQueueJob(models.Model):
     def delay_me(self, arg, kwarg=None):
         return arg, kwarg
 
+    def call_delay_me(self):
+        return self.delay_me(1, kwarg=2)
+
     def delay_me_options_job_options(self):
         return {
             "identity_key": "my_job_identity",

@@ -215,12 +215,7 @@ class Base(models.AbstractModel):
             # when no context_key is set, we delay in any case (warning, can be
             # dangerous)
             context_delay = self.env.context.get(context_key) if context_key else True
-            if (
-                self.env.context.get("job_uuid")
-                or not context_delay
-                or must_run_without_delay(self.env)
-            ):
-                # we are in the job execution
+            if not context_delay or must_run_without_delay(self.env):
                 return auto_delay_wrapper.origin(self, *args, **kwargs)
             else:
                 # replace the synchronous call by a job on itself
